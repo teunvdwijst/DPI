@@ -18,8 +18,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
-import message.BrokerToClientReceiver;
-import message.ClientToBrokerSender;
+import appgateway.AppGateway;
 
 import messaging.requestreply.RequestReply;
 import model.loan.*;
@@ -34,8 +33,8 @@ public class LoanClientFrame extends JFrame {
     private JTextField tfSSN;
     private DefaultListModel<RequestReply<LoanRequest, LoanReply>> listModel = new DefaultListModel<RequestReply<LoanRequest, LoanReply>>();
     private JList<RequestReply<LoanRequest, LoanReply>> requestReplyList;
-    private ClientToBrokerSender sender;
     private Map<String, LoanRequest> correlation = new HashMap<>();
+    private AppGateway gateway;
 
     private JTextField tfAmount;
     private JLabel lblNewLabel;
@@ -120,7 +119,7 @@ public class LoanClientFrame extends JFrame {
 
                 LoanRequest request = new LoanRequest(ssn, amount, time);
                 listModel.addElement(new RequestReply<LoanRequest, LoanReply>(request, null));
-                sender = new ClientToBrokerSender(request, LoanClientFrame.this);
+                gateway.applyForLoan(request);
             }
         });
         GridBagConstraints gbc_btnQueue = new GridBagConstraints();
@@ -140,6 +139,7 @@ public class LoanClientFrame extends JFrame {
 
         requestReplyList = new JList<RequestReply<LoanRequest, LoanReply>>(listModel);
         scrollPane.setViewportView(requestReplyList);
+        gateway = new AppGateway("ClientToBroker", "BrokerToClient");
     }
 
     /**
@@ -179,7 +179,6 @@ public class LoanClientFrame extends JFrame {
             public void run() {
                 try {
                     LoanClientFrame frame = new LoanClientFrame();
-                    BrokerToClientReceiver receiver = new BrokerToClientReceiver(frame);
                     frame.setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();
